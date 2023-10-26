@@ -1,0 +1,5 @@
+pandas
+pyarrow
+scrapy
+fastparquet
+elasticsearch==7.10.0

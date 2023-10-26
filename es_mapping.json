@@ -1,0 +1,40 @@
+{
+    "mappings": {
+        "properties": {
+            "database": {
+                "type": "keyword"
+            },
+            "filename": {
+                "type": "keyword"
+            },
+            "loadedAt": {
+                "format": "date",
+                "type": "date"
+            },
+            "metadata": {
+                "properties": {
+                    "date": {
+                        "format": "strict_date_optional_time||epoch_millis",
+                        "null_value": "0000-01-01",
+                        "type": "date"
+                    },
+                    "id": {
+                        "type": "keyword"
+                    },
+                    "juridiction": {
+                        "type": "keyword"
+                    },
+                    "number": {
+                        "type": "keyword"
+                    },
+                    "title": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            "text": {
+                "type": "text"
+            }
+        }
+    }
+}

@@ -1,11 +1,10 @@
 import scrapy
 import logging
-from scrapy.utils.log import configure_logging 
 import pandas as pd
+from datetime import datetime
+from .correspondance_prenoms import table_correspondance
 
 logger = logging.getLogger("mylog")
-
-
 
 class LegifranceSpider(scrapy.Spider):
     logger.warn("\n **** legifrance_spider script is starting **** \n")
@@ -31,8 +30,7 @@ class LegifranceSpider(scrapy.Spider):
         titre = response.css("h1.main-title::text").get()
         logger.warning("**** titre ****: " + titre)
 
-        metadata = titre.split(',')
-        #texte_document = response.css("div.content-page > div::text").getall()
+        metadata = titre.split(', ')
         texte_document = "\n".join(response.xpath('//div[@class="content-page"]//div//text()').extract())
         
 
@@ -45,9 +43,22 @@ class LegifranceSpider(scrapy.Spider):
         }
         self.data.append(item)
 
+    
+        
+    def remplacer_correspondance(args, texte):
+        if isinstance(texte, str): 
+            for lettre, prenom in table_correspondance.items():
+                texte = str(texte).replace(f"[{lettre}]", prenom)
+        return texte
+
     def closed(self, reason):
         logger.warning("\n write_parquet is called \n")
-        logger.warning(reason)
         df = pd.DataFrame(self.data)
-        logger.warning(df.size)
-        df.to_parquet("legifrance_data.parquet", index=False)
+
+        df['texte'] = df['texte'].apply(self.remplacer_correspondance)
+
+        aujourdhui = datetime.now()
+        date_formattee = aujourdhui.strftime("%Y-%m-%d")
+
+        df.to_parquet(f"{date_formattee}_legifrance_data.parquet", index=False)
+
