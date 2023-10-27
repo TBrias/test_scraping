@@ -1,3 +1,4 @@
+import os
 import scrapy
 from scrapy import exceptions
 import logging
@@ -90,5 +91,5 @@ class LegifranceSpider(scrapy.Spider):
         today = datetime.now()
         date_formattee = today.strftime("%Y-%m-%d")
 
-        df.to_parquet(f"{date_formattee}_legifrance_data.parquet", index=False)
+        df.to_parquet(os.path.join("output",f"{date_formattee}_legifrance_data.parquet"), index=False)
 

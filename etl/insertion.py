@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
@@ -33,7 +34,7 @@ def main():
 def read_parquet():
     df = pd.DataFrame() 
     try:
-        df = pd.read_parquet(f"./predictice_scrapy/{parquet_filename}")
+        df = pd.read_parquet(os.path.join(".","predictice_scrapy", "output", parquet_filename))
     except FileNotFoundError:
         logging.error(f"Le fichier {parquet_filename} n'existe pas")
 
