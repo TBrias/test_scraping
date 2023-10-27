@@ -2,10 +2,11 @@ import scrapy
 from scrapy import exceptions
 import logging
 import pandas as pd
+import re
 from datetime import datetime
 from .correspondance_prenoms import table_correspondance
 
-logger = logging.getLogger("mylog")
+logger = logging.getLogger("scrapping_spider")
 
 class LegifranceSpider(scrapy.Spider):
     logger.warn("\n **** legifrance_spider script is starting **** \n")
@@ -21,17 +22,18 @@ class LegifranceSpider(scrapy.Spider):
         if (arg_start_date and arg_end_date) is not None:
             self.start_date = arg_start_date
             self.end_date = arg_end_date
+        self.data = []
         self.page = 1
         self.max_page = 1
         self.start_urls = [f"https://www.legifrance.gouv.fr/search/juri?tab_selection=juri&searchField=ALL&query=*&searchType=ALL&dateDecision={self.start_date}+%3E+{self.end_date}&typePagination=DEFAULT&sortValue=DATE_DESC&pageSize=10&page=1&tab_selection=juri#juri"]
     
     def parse(self, response):
-        self.data = []
         # Récupération du nombre max de page
         self.max_page=response.css("li.pager-item a::attr(data-num)").getall()[-1]
 
         # Récupération de tous les liens présents
         links = response.css("article.result-item > h2 a::attr(href)").getall()
+
 
         # Fermeture du spider si plus de résultat sur la page courante
         if  "Aucun résultat pour la page" in response.css("div.container-pager ::text").get():
@@ -47,33 +49,43 @@ class LegifranceSpider(scrapy.Spider):
         yield scrapy.Request(next_page, callback=self.parse)
 
 
+    def get_date_from_string(self, str):
+        date_match = re.search(r'\d{2} \w+ \d{4}', str)
+        if date_match:
+            return date_match.group()
+
     def parse_detail(self, response):        
-        titre = response.css("h1.main-title::text").get()
+        titre = response.css("h1::text").get()
         metadata = titre.split(', ')
-        texte_document = "\n".join(response.xpath('//div[@class="content-page"]//div//text()').extract())                                    
+        date = self.get_date_from_string(response.css("div.horsAbstract::text").get())
+        numero_brut = response.xpath('//div[@class="frame-block print-sommaire"]//div//ul//li//text()').get()
+        num_decision = numero_brut.split(":")[1].strip()
+        texte_document = "\n".join(response.xpath('//div[@class="content-page"]//div//text()').extract())                              
 
         item = {
             "titre": titre,
             "juridiction": metadata[0],
-            "date": metadata[1],
-            "numero_decision": metadata[2],
+            "date": date,
+            "numero_decision": num_decision,
             "texte": texte_document
         }
         self.data.append(item)
   
 
-    def remplacer_correspondance(args, texte):
+    def replace_correspondance(self, texte):
         if isinstance(texte, str): 
-            for lettre, prenom in table_correspondance.items():
-                texte = str(texte).replace(f"[{lettre}]", prenom)
+            for lettre, nom in table_correspondance.items():
+                texte = str(texte).replace(f"[{lettre}]", nom)
         return texte
 
 
+
     def closed(self, reason):
+        logger.error("\n \nFIN                    FIN               FIN                    FIN  \n \n")
         df = pd.DataFrame(self.data)
 
         # Desanonymisation: ex: [C] -> Charles
-        df['texte'] = df['texte'].apply(self.remplacer_correspondance)
+        df['texte'] = df['texte'].apply(self.replace_correspondance)
 
         today = datetime.now()
         date_formattee = today.strftime("%Y-%m-%d")
