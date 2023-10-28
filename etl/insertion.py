@@ -2,17 +2,16 @@ import os
 import pandas as pd
 from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
-import configparser
 import locale
 import logging
 
 logger = logging.getLogger("insertion")
 logging.basicConfig(level=logging.INFO)
-config = configparser.ConfigParser()
-es = Elasticsearch(host = "localhost", port = 9200)
+es = Elasticsearch(host = "es_container", port = 9200)
 
 # Pour pouvoir formater les dates en français
 locale.setlocale(locale.LC_ALL, 'fr_FR')
+index_name = "legifrance"
 date_formattee = datetime.now().strftime("%Y-%m-%d")
 parquet_filename = f"{date_formattee}_legifrance_data.parquet"
 
@@ -57,7 +56,7 @@ def transform_to_dict(df):
 def generator(df_dict):
     for c, line in enumerate(df_dict):
         yield {
-            '_index': 'test',
+            '_index': index_name,
             'database': 'database',
             'filename': parquet_filename,
             'loadedAt': date_formattee,

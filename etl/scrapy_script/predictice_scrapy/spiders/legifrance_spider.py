@@ -16,8 +16,8 @@ class LegifranceSpider(scrapy.Spider):
 
     name = "legifrance_spider"
     allowed_domains = ["legifrance.gouv.fr"]
-    start_date = "01/06/2022"
-    end_date = "30/06/2022"
+    start_date = "01/06/2023"
+    end_date = "30/06/2023"
 
     def __init__(self, arg_start_date=None, arg_end_date=None, *args, **kwargs):
         super(LegifranceSpider, self).__init__(*args, **kwargs)
@@ -32,7 +32,10 @@ class LegifranceSpider(scrapy.Spider):
     
     def parse(self, response):
         # Récupération du nombre max de page
-        self.max_page=response.css("li.pager-item a::attr(data-num)").getall()[-1]
+        try:
+            self.max_page=response.css("li.pager-item a::attr(data-num)").getall()[-1]
+        except IndexError:
+            raise exceptions.CloseSpider('Pas de résultat sur la page demandée')
 
         # Récupération de tous les liens présents
         links = response.css("article.result-item > h2 a::attr(href)").getall()
@@ -40,7 +43,7 @@ class LegifranceSpider(scrapy.Spider):
 
         # Fermeture du spider si plus de résultat sur la page courante
         if  "Aucun résultat pour la page" in response.css("div.container-pager ::text").get():
-            raise exceptions.CloseSpider('No more result')
+            raise exceptions.CloseSpider('La pagination ne retourne plus de résultats')
         
         # Appel de la fonction parse_detailpour récupérer toutes les informations voulues
         for link in links:
