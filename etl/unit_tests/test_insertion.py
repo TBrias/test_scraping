@@ -1,12 +1,14 @@
-import pytest
-import pandas as pd
 import sys
+
+import pandas as pd
+import pytest
+
 sys.path.append('../etl')
 import insertion
 
+
 @pytest.fixture
 def sample_dataframe():
-    # Créez un DataFrame de test
     df = pd.DataFrame({
         "id": [1, 2, 3],
         "titre": ["Titre 1", "Titre 2", "Titre 3"],

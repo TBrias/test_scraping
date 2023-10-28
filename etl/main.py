@@ -1,11 +1,12 @@
+import logging
 import os
+from datetime import datetime
+
+import es.create_es_index as create_es_index
+import insertion
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from scrapy_script.predictice_scrapy.spiders import legifrance_spider
-import insertion
-import es.create_es_index as create_es_index
-import logging
-from datetime import datetime
 
 logger = logging.getLogger("main")
 logging.basicConfig(level=logging.INFO)

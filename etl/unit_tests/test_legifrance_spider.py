@@ -1,7 +1,11 @@
-import pytest
 import sys
+
+import pytest
+
 sys.path.append('../etl/')
-from scrapy_script.predictice_scrapy.spiders.legifrance_spider import LegifranceSpider
+from scrapy_script.predictice_scrapy.spiders.legifrance_spider import \
+    LegifranceSpider
+
 
 @pytest.fixture
 def sample_spider():
