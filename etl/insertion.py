@@ -6,9 +6,8 @@ import configparser
 import locale
 import logging
 
-logger = logging.getLogger("insertion_to_es")
+logger = logging.getLogger("insertion")
 logging.basicConfig(level=logging.INFO)
-start_time = datetime.now()
 config = configparser.ConfigParser()
 es = Elasticsearch(host = "localhost", port = 9200)
 
@@ -18,7 +17,7 @@ date_formattee = datetime.now().strftime("%Y-%m-%d")
 parquet_filename = f"{date_formattee}_legifrance_data.parquet"
 
 def main():
-    logger.info(f"Début du script d'insertion dans es : {start_time}")
+    logger.info(f"Début du script d'insertion dans es : {datetime.now()}")
     # Extract
     df = read_parquet()
 
@@ -34,7 +33,7 @@ def main():
 def read_parquet():
     df = pd.DataFrame() 
     try:
-        df = pd.read_parquet(os.path.join(".","predictice_scrapy", "output", parquet_filename))
+        df = pd.read_parquet(os.path.join(".","scrapy_script", "output", parquet_filename))
     except FileNotFoundError:
         logging.error(f"Le fichier {parquet_filename} n'existe pas")
 
@@ -62,7 +61,7 @@ def generator(df_dict):
             'database': 'database',
             'filename': parquet_filename,
             'loadedAt': date_formattee,
-            '_id':line.get("numero_decision", None),
+            '_id':line.get("id", None),
             'metadata':{
                 'titre':line.get("titre", None),
                 'juridiction':line.get("juridiction", None),
@@ -82,4 +81,5 @@ def bulk_insert(es, df_dict):
         logger.error(e)
         pass
 
-main()
+if __name__ == '__main__':
+    main()

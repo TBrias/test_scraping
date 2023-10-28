@@ -3,14 +3,16 @@ import scrapy
 from scrapy import exceptions
 import logging
 import pandas as pd
+import random
 import re
+import string
 from datetime import datetime
 from .correspondance_prenoms import table_correspondance
 
 logger = logging.getLogger("scrapping_spider")
 
 class LegifranceSpider(scrapy.Spider):
-    logger.warn("\n **** legifrance_spider script is starting **** \n")
+    logger.info(f"Début du script de scrapping : {datetime.now()}")
 
     name = "legifrance_spider"
     allowed_domains = ["legifrance.gouv.fr"]
@@ -54,8 +56,17 @@ class LegifranceSpider(scrapy.Spider):
         date_match = re.search(r'\d{2} \w+ \d{4}', str)
         if date_match:
             return date_match.group()
+        
+    def get_id_from_url(self, str_url):
+        match = re.search(r"/JURITEXT(\d+)", str_url)
+        if match:
+            return match.group(1)
+        else:
+            return ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
 
-    def parse_detail(self, response):        
+
+    def parse_detail(self, response):  
+        id = self.get_id_from_url(response.request.url)
         titre = response.css("h1::text").get()
         metadata = titre.split(', ')
         date = self.get_date_from_string(response.css("div.horsAbstract::text").get())
@@ -68,7 +79,8 @@ class LegifranceSpider(scrapy.Spider):
             "juridiction": metadata[0],
             "date": date,
             "numero_decision": num_decision,
-            "texte": texte_document
+            "texte": texte_document,
+            "id":id
         }
         self.data.append(item)
   
@@ -82,7 +94,6 @@ class LegifranceSpider(scrapy.Spider):
 
 
     def closed(self, reason):
-        logger.error("\n \nFIN                    FIN               FIN                    FIN  \n \n")
         df = pd.DataFrame(self.data)
 
         # Desanonymisation: ex: [C] -> Charles
@@ -92,4 +103,7 @@ class LegifranceSpider(scrapy.Spider):
         date_formattee = today.strftime("%Y-%m-%d")
 
         df.to_parquet(os.path.join("output",f"{date_formattee}_legifrance_data.parquet"), index=False)
+
+        logger.info(f"Fin du script de scrapping : {datetime.now()}")
+
 

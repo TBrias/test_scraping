@@ -12,5 +12,8 @@ ENV LANGUAGE fr_FR.UTF-8
 RUN dpkg-reconfigure locales
 # Exécutez le script principal
 
-WORKDIR /etl/predictice_test/predictice_scrapy
-CMD ["scrapy", "crawl legifrance_spider"]
+#WORKDIR /scrapy/predictice_scrapy
+#CMD ["scrapy", "crawl legifrance_spider"]
+
+WORKDIR /
+CMD ["python", "main.py"]
