@@ -38,15 +38,16 @@ class LegifranceSpider(scrapy.Spider):
         self.start_urls = [f"https://www.legifrance.gouv.fr/search/juri?tab_selection=juri&searchField=ALL&query=*&searchType=ALL&dateDecision={self.start_date}+%3E+{self.end_date}&typePagination=DEFAULT&sortValue=DATE_DESC&pageSize=10&page=1&tab_selection=juri#juri"]
     
     def parse(self, response):
+        logger.info(f"Page: {self.page}")
         # Récupération du nombre max de page, fermeture du spider si pas de résultats
         try:
             self.max_page=response.css("li.pager-item a::attr(data-num)").getall()[-1]
         except IndexError:
-            raise exceptions.CloseSpider('Pas de résultat sur la page demandée')
+            logger.error("Pas de résultat sur la page demandée")
 
         # Récupération de tous les liens présents
-        links = response.css("article.result-item > h2 a::attr(href)").getall()
-
+        links = response.xpath('//article[@class="result-item"]//h2//a//@href').getall()
+        
         # Fermeture du spider si plus de résultat sur la page courante
         if  "Aucun résultat pour la page" in response.css("div.container-pager ::text").get():
             raise exceptions.CloseSpider('La pagination ne retourne plus de résultats')
@@ -54,7 +55,7 @@ class LegifranceSpider(scrapy.Spider):
         # Appel de la fonction parse_detail pour récupérer toutes les informations voulues
         for link in links:
             yield response.follow(link, callback=self.parse_detail)
-
+        
         # Pagination et appel de la prochaine page
         self.page += 1
         next_page = f"https://www.legifrance.gouv.fr/search/juri?tab_selection=juri&searchField=ALL&query=*&searchType=ALL&dateDecision={self.start_date}+%3E+{self.end_date}&typePagination=DEFAULT&sortValue=DATE_DESC&pageSize=10&page={self.page}&tab_selection=juri#juri"
@@ -83,9 +84,9 @@ class LegifranceSpider(scrapy.Spider):
 
     def parse_detail(self, response):  
         id = self.get_id_from_url(response.request.url)
-        titre = response.css("h1::text").get()
+        titre = response.xpath('//h1//text()').get()
         metadata = titre.split(', ')
-        date = self.get_date_from_string(response.css("div.horsAbstract::text").get())
+        date = self.get_date_from_string(response.xpath('//div[@class="h2 title horsAbstract print-black"]//text()').get())
         numero_brut = response.xpath('//div[@class="frame-block print-sommaire"]//div//ul//li//text()').get()
         num_decision = numero_brut.split(":")[1].strip()
         # Le "\n" sert à ajouter des sauts de ligne en fin de phrase
@@ -113,7 +114,6 @@ class LegifranceSpider(scrapy.Spider):
 
     def closed(self, reason):
         df = pd.DataFrame(self.data)
-
         df['texte'] = df['texte'].apply(self.replace_correspondance)
 
         today = datetime.now()
@@ -121,7 +121,6 @@ class LegifranceSpider(scrapy.Spider):
 
         #Ecriture du parquet
         df.to_parquet(os.path.join("output",f"{date_formattee}_legifrance_data.parquet"), index=False)
-
         logger.info(f"Fin du script de scrapping : {datetime.now()}")
 
 

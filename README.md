@@ -24,10 +24,10 @@ Le librairie scrapy a été utilisée
 
 * [legifrance_spider.py](etl\scrapy_script\predictice_scrapy\spiders\legifrance_spider.py)
     
-    Le script va lire chaque lien présent sur la première page, puis passera à la page suivante.
+    Le script récupère la liste des liens présente sur la première page, les lit, puis passera à la page suivante.
     Utiliser pour les dates entre le 01/06/2022 et 30/06/2022
 
-    En ajoutant des dates de début/fin en arguments au lancement du script, on peut personnaliser la plage de date
+    Pour le debug, en ajoutant des dates de début/fin en arguments au lancement du script, on peut personnaliser la plage de date
 
     Ex de lancement: scrapy crawl legifrance_spider -a start_date="05/06/2023" -a end_date="06/06/2023"
 
@@ -39,20 +39,18 @@ Le librairie scrapy a été utilisée
 
 * [settings.py](etl\scrapy_script\predictice_scrapy\settings.py)
 
-    Ajout de la variable dans le fichier settings de scrapy: USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36"
-    
-    Qui servira à accéder au site legifrance
+    Ajout de la variable dans le fichier settings de scrapy: USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36", qui sert à accéder au site legifrance
+
+    J'ai également ajouté AUTOTHROTTLE_ENABLED = True, sans ça certaines pages n'étaient pas lues pendant le crawl. Par contre les performances sont impactées
 
 ### 2. Elasticsearch
 * [insertion.py](etl\insertion.py)
 
     Script d'insertion des données dans Elasticsearch
 
-    Lecture du fichier .parquet du jour
-
-    Transformation du format du champ date
-
-    Insertion la bulk api dans l'index ES
+    * Lecture du fichier .parquet du jour
+    * Transformation du format du champ date
+    * Insertion avec la bulk api dans l'index ES
 
 * [create_es_index.py](etl\es\create_es_index.py)
 
@@ -64,7 +62,7 @@ Le librairie scrapy a été utilisée
 
     Mapping des données de l'index
 
-    Comme c'est un environnement de test, j'ai ajouté "number_of_replicas": 0 en settings, car le nombre de replicas doit être inférieur au nombre de noeud du cluster, sinon l'état devient 'Yellow'
+    Comme c'est un environnement de test, j'ai ajouté "number_of_replicas": 0 en settings, car le nombre de replicas doit être inférieur au nombre de noeud du cluster, sinon l'état reste à 'Yellow'
 
 ### 3. Docker
 * [Dockerfile](etl\Dockerfile)
