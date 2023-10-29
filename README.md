@@ -29,7 +29,7 @@ Une fois démarré, le script ````main.py```` est joué, il va:
 
 ### 1. Scrapping
 
-Le librairie scrapy a été utilisée
+La librairie scrapy a été utilisée
 
 * [legifrance_spider.py](etl\scrapy_script\predictice_scrapy\spiders\legifrance_spider.py)
     
