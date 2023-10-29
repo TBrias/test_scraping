@@ -12,7 +12,8 @@ logging.basicConfig(level=logging.INFO)
 def create_index():
     """
     Création de l'index ES dans lequel seront stockées les données ensuite
-    Vérification de la conformité du cluster, puis création de l'index avec son mapping
+    Vérification de la conformité du cluster, Docker peut mettre un certain temps avant de démarrer le service
+    puis création de l'index avec son mapping
     """
     logger.info(f"Lancement du script de création de l'index ES : {datetime.now()}")
     os.chdir(os.path.dirname(__file__))

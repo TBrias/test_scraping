@@ -1,5 +1,14 @@
 # Exercice Data Engineer
 
+- [Exercice Data Engineer](#exercice-data-engineer)
+  - [1. Installation](#1-installation)
+  - [2. Explications des fichiers](#2-explications-des-fichiers)
+    - [1. Scrapping](#1-scrapping)
+    - [2. Elasticsearch](#2-elasticsearch)
+    - [3. Docker](#3-docker)
+    - [4. Unit tests](#4-unit-tests)
+  - [3. Requêtes ES](#3-requêtes-es)
+
 ## 1. Installation
 
 * Prérequis: Avoir installé Docker
@@ -88,3 +97,13 @@ Le librairie scrapy a été utilisée
 * [Dossier de tests unitaires](etl\unit_tests)
 
     Deux fichiers de TU sur l'insertion et le spider ont été ajoutés
+
+
+## 3. Requêtes ES
+
+Il n'y a pas de Kibana dans les images docker
+
+On peut vérifier si les données ont bien été insérées avec quelques requêtes:
+
+* Vérification de la présence de l'index: http://localhost:9200/_cat/indices
+* Vérification du nombre de documents indéxés: http://localhost:9200/legifrance/_count
