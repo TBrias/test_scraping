@@ -4,9 +4,9 @@ import os
 import time
 from datetime import datetime
 
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, exceptions
 
-logger = logging.getLogger("create_es_index")
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 def create_index():
@@ -17,28 +17,33 @@ def create_index():
     logger.info(f"Lancement du script de création de l'index ES : {datetime.now()}")
     os.chdir(os.path.dirname(__file__))
     
-    #L'host 'es_container' est créé dans le docker-compose.yml
+    # L'host 'es_container' est créé dans le docker-compose.yml
     es = Elasticsearch(host = "es_container", port = 9200)
 
     while True:
-        #On vérifie que le cluster est bien OK
-        cluster_health = es.cluster.health()
-        if cluster_health['status'] == 'green':
-            logger.info("Le cluster Elasticsearch est en état 'GREEN'.")
+        # On vérifie que le service Elasticsearch soit bien démarré
+        try:
+            es.cluster.health()
+            logger.warn(f"Le service Elasticsearch est bien démarré")
             break
-        else:
-            logger.warn(f"En attente que le cluster atteigne l'état 'GREEN'. Actuellement en état: {cluster_health['status']}")
-            time.sleep(5) #On fait un tour de boucle si jamais le cluster n'est pas encore complètement démarré
 
-    #Appel du fichier json de mapping
+        except (
+            exceptions.ConnectionError,
+            exceptions.TransportError
+        ):
+            # On fait un tour de boucle si jamais le cluster n'est pas encore complètement démarré
+            logger.warn(f"En attente que le service Elasticsearch soit bien démarré")
+            time.sleep(5)
+
+    # Appel du fichier json de mapping
     with open("./es_mapping.json", 'r') as file:
         mapping = json.load(file)
 
-    #Création de l'index
+    # Création de l'index
     es.indices.create(
         index="legifrance",
         body=mapping,
-        ignore=400 #Au cas ou si l'index existe déjà
+        ignore=400 # Au cas ou si l'index existe déjà
     )
 
     logger.info(f"Fin du script de création de l'index ES : {datetime.now()}")

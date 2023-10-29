@@ -6,7 +6,7 @@ from datetime import datetime
 import pandas as pd
 from elasticsearch import Elasticsearch, helpers
 
-logger = logging.getLogger("insertion")
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 # Pour pouvoir formater les dates en français
 locale.setlocale(locale.LC_ALL, 'fr_FR')
@@ -32,9 +32,9 @@ def main():
 
 
 def read_parquet():
-    df = pd.DataFrame() 
+    df = pd.DataFrame()
     try:
-        df = pd.read_parquet(os.path.join(".","scrapy_script", "output", parquet_filename))
+        df = pd.read_parquet(os.path.join("scrapy_script", "output", parquet_filename))
     except FileNotFoundError:
         logging.error(f"Le fichier {parquet_filename} n'existe pas")
 
@@ -57,7 +57,7 @@ def transform_to_dict(df):
     except KeyError:
         logging.error(f"La colonne ou le dataframe est vide")
 
-    #Convertit le dataframe pandas en une liste de dictionnaires
+    # Convertit le dataframe pandas en une liste de dictionnaires
     return df.to_dict('records')
 
 
@@ -84,7 +84,7 @@ def generator(df_dict):
 
 
 def bulk_insert(es, df_dict):
-    #Utilisation du bulk ES pour insérer les documents
+    # Utilisation du bulk ES pour insérer les documents
     try:
         res = helpers.bulk(es, generator(df_dict))
         logger.info(f"Documents ayant été insérés dans ElasticSearch: {res}" )

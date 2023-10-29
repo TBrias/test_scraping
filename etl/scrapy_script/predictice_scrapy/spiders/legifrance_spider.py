@@ -11,20 +11,24 @@ from scrapy import exceptions
 
 from .correspondance_prenoms import table_correspondance
 
-logger = logging.getLogger("scrapping_spider")
+logger = logging.getLogger(__name__)
 
 class LegifranceSpider(scrapy.Spider):
     logger.info(f"Début du script de scrapping : {datetime.now()}")
 
     name = "legifrance_spider"
     allowed_domains = ["legifrance.gouv.fr"]
-    start_date = "01/06/2023"
-    end_date = "30/06/2023"
+    start_date = "01/06/2022"
+    end_date = "30/06/2022"
 
     def __init__(self, arg_start_date=None, arg_end_date=None, *args, **kwargs):
         super(LegifranceSpider, self).__init__(*args, **kwargs)
-        # Si présence d'arguments pour spécifier la date de début/fin
-        #  dans la commande de lancement du crawl, on override. Utiliser pour le dev
+        """
+        Si présence d'arguments pour spécifier la date de début/fin dans la commande de lancement du crawl, on override. 
+        Utiliser pour le dev. Exemple: 
+            scrapy crawl legifrance_spider -a start_date="05/06/2023" -a end_date="06/06/2023"
+        """
+
         if (arg_start_date and arg_end_date) is not None:
             self.start_date = arg_start_date
             self.end_date = arg_end_date
